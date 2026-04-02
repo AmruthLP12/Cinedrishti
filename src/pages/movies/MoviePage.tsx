@@ -16,6 +16,7 @@ import {
   Clapperboard,
 } from "lucide-react";
 import type { enumMovieGenre, enumMovieType } from "@/features/movies/types";
+import { useAddToTracking, useTracking } from "@/features/tracking/hooks";
 
 const TYPE_CONFIG: Record<
   enumMovieType,
@@ -63,6 +64,10 @@ const MoviePageSkeleton = () => (
 const MoviePage = () => {
   const { id } = useParams();
   const { data: movie, isLoading, isError } = useMovie(id!);
+  const { mutate, isPending } = useAddToTracking();
+  const { data: tracking } = useTracking();
+
+  const isTracked = tracking?.some((item) => item.movieId === id);
 
   if (isLoading) return <MoviePageSkeleton />;
 
@@ -236,6 +241,18 @@ const MoviePage = () => {
                 </div>
               )}
             </div>
+
+            <button
+              onClick={() => mutate(movie.$id)}
+              disabled={isTracked || isPending}
+              className="mt-4 bg-violet-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            >
+              {isPending
+                ? "Adding..."
+                : isTracked
+                  ? "Added ✓"
+                  : "Add to Watchlist"}
+            </button>
           </div>
         </div>
       </div>

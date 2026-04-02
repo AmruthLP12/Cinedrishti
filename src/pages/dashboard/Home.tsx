@@ -20,7 +20,7 @@ const GENRE_STYLES: Record<enumMovieGenre, string> = {
 
 const MovieCardSkeleton = () => (
   <div className="rounded-xl overflow-hidden border border-border bg-card">
-    <Skeleton className="w-full aspect-[2/3]" />
+    <Skeleton className="w-full aspect-2/3" />
     <div className="p-3 space-y-2">
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-1/3" />
@@ -34,7 +34,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => (
     className="group relative rounded-xl overflow-hidden border border-border bg-card hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 block"
   >
     {/* Poster */}
-    <div className="relative overflow-hidden aspect-[2/3] bg-muted">
+    <div className="relative overflow-hidden aspect-2/3 bg-muted">
       {movie.poster ? (
         <img
           src={movie.poster}
@@ -50,7 +50,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => (
         </div>
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="absolute top-2 right-2">
         <Badge className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 ${TYPE_STYLES[movie.type]}`}>
