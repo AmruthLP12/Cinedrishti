@@ -21,4 +21,13 @@ type Movie = {
   createdBy: string;
 };
 
-export type { Movie, enumMovieType, enumMovieGenre };
+type MovieInput = {
+  title: string;
+  description?: string;
+  type: enumMovieType;
+  poster?: string;
+  releaseYear?: number;
+  genre?: enumMovieGenre;
+};
+
+export type { Movie, enumMovieType, enumMovieGenre , MovieInput};

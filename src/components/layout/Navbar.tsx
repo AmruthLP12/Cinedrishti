@@ -73,7 +73,7 @@ export const Navbar = () => {
             <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
           <span className="font-heading font-bold text-lg text-foreground tracking-tight hidden sm:inline">
-            Acme
+            Cinedrishti
           </span>
         </Link>
 
@@ -186,7 +186,7 @@ export const Navbar = () => {
                     <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
                   </div>
                   <span className="font-heading font-bold text-lg text-foreground">
-                    Acme
+                    Cinedrishti
                   </span>
                 </div>
 

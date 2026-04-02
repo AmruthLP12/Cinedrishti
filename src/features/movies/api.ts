@@ -3,17 +3,12 @@ const TABLE_MOVIES_ID = import.meta.env.VITE_APPWRITE_TABLE_MOVIES_ID;
 
 import { account, db } from "@/lib/appwrite";
 
-import type { Movie, enumMovieType, enumMovieGenre } from "./types";
+import type { Movie, MovieInput } from "./types";
 import { ID, Permission, Role } from "appwrite";
 
-type MovieInput = {
-  title: string;
-  description?: string;
-  type: enumMovieType;
-  poster?: string;
-  releaseYear?: number;
-  genre?: enumMovieGenre;
-};
+
+
+
 
 const getMovies = async (): Promise<Movie[]> => {
   try {
@@ -26,6 +21,14 @@ const getMovies = async (): Promise<Movie[]> => {
     console.error("Error fetching movies:", error);
     throw error;
   }
+};
+
+const getMovie = async (id: string): Promise<Movie> => {
+  return await db.getRow<Movie>({
+    databaseId: DATABASE_ID,
+    tableId: TABLE_MOVIES_ID,
+    rowId: id,
+  });
 };
 
 const createMovie = async (data: MovieInput) => {
@@ -45,7 +48,6 @@ const createMovie = async (data: MovieInput) => {
         createdBy: user.$id,
       },
       permissions: [
-        Permission.read(Role.user(user.$id)),
         Permission.update(Role.user(user.$id)),
         Permission.delete(Role.user(user.$id)),
       ],
@@ -57,12 +59,17 @@ const createMovie = async (data: MovieInput) => {
   }
 };
 
-const getMovie = async (id: string): Promise<Movie> => {
-  return await db.getRow<Movie>({
+const updateMovie = async (id: string, data: MovieInput) => {
+  const res = await db.updateRow<Movie>({
     databaseId: DATABASE_ID,
     tableId: TABLE_MOVIES_ID,
     rowId: id,
+    data,
   });
+
+  return res;
 };
 
-export { getMovies, createMovie, getMovie };
+
+
+export { getMovies, createMovie, getMovie, updateMovie };

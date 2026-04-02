@@ -44,7 +44,7 @@ const MoviePageSkeleton = () => (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <Skeleton className="h-8 w-24" />
       <div className="flex flex-col md:flex-row gap-8">
-        <Skeleton className="w-full md:w-56 lg:w-72 aspect-[2/3] rounded-xl shrink-0" />
+        <Skeleton className="w-full md:w-56 lg:w-72 aspect-2/3 rounded-xl shrink-0" />
         <div className="flex-1 space-y-4 pt-2">
           <Skeleton className="h-9 w-2/3" />
           <Skeleton className="h-4 w-1/3" />
@@ -104,7 +104,7 @@ const MoviePage = () => {
             style={{ backgroundImage: `url(${movie.poster})` }}
           />
         )}
-        <div className="absolute inset-0 h-72 bg-gradient-to-b from-background/0 via-background/60 to-background pointer-events-none" />
+        <div className="absolute inset-0 h-72 bg-linear-to-b from-background/0 via-background/60 to-background pointer-events-none" />
       </div>
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
@@ -125,7 +125,7 @@ const MoviePage = () => {
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12">
           {/* Poster */}
           <div className="shrink-0 w-full md:w-56 lg:w-64">
-            <div className="aspect-[2/3] rounded-xl overflow-hidden border border-border bg-muted shadow-2xl shadow-black/20">
+            <div className="aspect-2/3 rounded-xl overflow-hidden border border-border bg-muted shadow-2xl shadow-black/20">
               {movie.poster ? (
                 <img
                   src={movie.poster}

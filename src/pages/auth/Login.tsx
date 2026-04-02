@@ -43,7 +43,7 @@ const Login = () => {
               <Sparkles className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-heading font-bold text-xl text-foreground tracking-tight">
-              Acme
+              Cinedrishti
             </span>
           </div>
         </div>
