@@ -70,6 +70,15 @@ const updateMovie = async (id: string, data: MovieInput) => {
   return res;
 };
 
+const deleteMovie = async (id: string) => {
+  const res = await db.deleteRow({
+    databaseId: DATABASE_ID,
+    tableId: TABLE_MOVIES_ID,
+    rowId: id,
+  });
+  return res;
+};
 
 
-export { getMovies, createMovie, getMovie, updateMovie };
+
+export { getMovies, createMovie, getMovie, updateMovie, deleteMovie };

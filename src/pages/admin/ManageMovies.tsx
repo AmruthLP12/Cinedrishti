@@ -1,13 +1,24 @@
 // pages/admin/ManageMovies.tsx
-import { useMovies } from "@/features/movies/hooks";
+import { useState } from "react";
+import { useMovies, useDeleteMovie } from "@/features/movies/hooks";
 import { Link } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Film, Edit, Trash2, AlertCircle, Plus, LayoutDashboard } from "lucide-react";
+import { Film, Edit, Trash2, AlertCircle, Plus, LayoutDashboard, Loader2 } from "lucide-react";
 import type { enumMovieGenre, enumMovieType } from "@/features/movies/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const TYPE_STYLES: Record<enumMovieType, string> = {
   movie: "bg-primary/90 text-primary-foreground",
@@ -21,6 +32,15 @@ const GENRE_STYLES: Record<enumMovieGenre, string> = {
 
 const ManageMovies = () => {
   const { data, isLoading, isError } = useMovies();
+  const { mutate: deleteMovie, isPending: isDeleting } = useDeleteMovie();
+  const [movieToDelete, setMovieToDelete] = useState<{ id: string; title: string } | null>(null);
+
+  const confirmDelete = () => {
+    if (movieToDelete) {
+      deleteMovie({ id: movieToDelete.id });
+      setMovieToDelete(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,8 +153,14 @@ const ManageMovies = () => {
                             <span className="sr-only">Edit</span>
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive disabled:opacity-50"
+                          onClick={() => setMovieToDelete({ id: movie.$id, title: movie.title })}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                           <span className="sr-only">Delete</span>
                         </Button>
                       </div>
@@ -146,6 +172,26 @@ const ManageMovies = () => {
           </Table>
         </div>
       </div>
+
+      <AlertDialog open={!!movieToDelete} onOpenChange={(open) => !open && setMovieToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the title "{movieToDelete?.title}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

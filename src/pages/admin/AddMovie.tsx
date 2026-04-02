@@ -98,7 +98,7 @@ const AddMovie = () => {
                   placeholder="A brief summary of the plot..."
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="min-h-[100px]"
+                  className="min-h-25"
                 />
               </div>
 

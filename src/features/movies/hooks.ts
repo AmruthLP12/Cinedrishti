@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { createMovie, getMovie, getMovies, updateMovie } from "./api";
+import { createMovie, deleteMovie, getMovie, getMovies, updateMovie } from "./api";
 import type { MovieInput } from "./types";
 
 export const useMovies = () => {
@@ -35,6 +35,18 @@ export const useUpdateMovie = () => {
     mutationFn: ({ id, data }: { id: string; data: MovieInput }) =>
       updateMovie(id, data),
 
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["movies"] });
+      queryClient.invalidateQueries({ queryKey: ["movie", variables.id] });
+    },
+  });
+};
+
+export const useDeleteMovie = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id }: { id: string }) => deleteMovie(id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["movies"] });
       queryClient.invalidateQueries({ queryKey: ["movie", variables.id] });

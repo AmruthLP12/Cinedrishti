@@ -50,26 +50,33 @@ const EditMovie = () => {
   }, [movie]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!id) return;
+  e.preventDefault();
+  if (!id) return;
 
-    updateMovie({
-      id,
-      data: {
-        title: form.title,
-        description: form.description,
-        type: form.type, 
-        poster: form.poster,
-        releaseYear: form.releaseYear ? Number(form.releaseYear) : undefined,
-        genre: form.genre, 
-      }
-    },
+  const payload: any = {
+  title: form.title,
+  type: form.type,
+};
+
+if (form.description) payload.description = form.description;
+if (form.poster) payload.poster = form.poster;
+if (form.genre) payload.genre = form.genre;
+if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
+
+  // ✅ only add if exists
+  if (form.releaseYear) {
+    payload.releaseYear = Number(form.releaseYear);
+  }
+
+  updateMovie(
+    { id, data: payload },
     {
       onSuccess: () => {
         navigate("/admin/movies");
       },
-    });
-  };
+    }
+  );
+};
 
   if (isFetching) {
     return (
