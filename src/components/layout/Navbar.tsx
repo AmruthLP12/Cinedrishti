@@ -32,21 +32,19 @@ const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
-
-
 export const Navbar = () => {
   // Mock — swap with useAuth()
   const { data: user, isLoading } = useUser();
   const { mutate: logoutUser } = useLogout();
-
-  
 
   const isAuthenticated = !!user;
   const isAdmin = user?.labels?.includes("admin");
 
   const navItems = [
     ...NAV_LINKS,
-    ...(isAdmin ? [{ label: "Admin", href: "/admin/movies", icon: Settings }] : []),
+    ...(isAdmin
+      ? [{ label: "Admin", href: "/admin/movies", icon: Settings }]
+      : []),
   ];
 
   const navigate = useNavigate();
@@ -96,7 +94,8 @@ export const Navbar = () => {
               to={href}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                location.pathname === href || (href !== "/" && location.pathname.startsWith(href))
+                location.pathname === href ||
+                  (href !== "/" && location.pathname.startsWith(href))
                   ? "text-primary bg-primary/10"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
@@ -211,7 +210,8 @@ export const Navbar = () => {
                       onClick={() => setMobileOpen(false)}
                       className={cn(
                         "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                        location.pathname === href || (href !== "/" && location.pathname.startsWith(href))
+                        location.pathname === href ||
+                          (href !== "/" && location.pathname.startsWith(href))
                           ? "text-primary bg-primary/10"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent",
                       )}

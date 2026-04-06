@@ -1,4 +1,5 @@
 // src/pages/movies/MoviePage.tsx
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMovie } from "@/features/movies/hooks";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +16,16 @@ import {
   Tv2,
   Clapperboard,
 } from "lucide-react";
-import type {  enumMovieType } from "@/features/movies/types";
-import { useAddToTracking, useTracking } from "@/features/tracking/hooks";
+import type { enumMovieType } from "@/features/movies/types";
+import {
+  useWatchlist,
+  useToggleWatchlist,
+  useTrackingForMovie,
+  useUpdateTracking,
+} from "@/features/tracking/hooks";
+import { useUser } from "@/features/auth/hooks";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const TYPE_CONFIG: Record<
   enumMovieType,
@@ -33,8 +42,6 @@ const TYPE_CONFIG: Record<
     style: "bg-secondary text-secondary-foreground border-border",
   },
 };
-
-
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const MoviePageSkeleton = () => (
@@ -59,12 +66,39 @@ const MoviePageSkeleton = () => (
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 const MoviePage = () => {
+  const [status, setStatus] = useState<"plan" | "watching" | "completed">(
+    "plan",
+  );
+  const [progress, setProgress] = useState(0);
+
+  const [rating, setRating] = useState(0);
+  const [initialized, setInitialized] = useState(false);
   const { id } = useParams();
   const { data: movie, isLoading, isError } = useMovie(id!);
-  const { mutate, isPending } = useAddToTracking();
-  const { data: tracking } = useTracking();
+  const { data: watchlist = [] } = useWatchlist();
+  const { mutate, isPending } = useToggleWatchlist();
+  const { data: user } = useUser();
+  const navigate = useNavigate();
 
-  const isTracked = tracking?.some((item) => item.movieId === id);
+  const isTracked = watchlist.includes(id!);
+
+  const statuses: ("plan" | "watching" | "completed")[] = [
+    "plan",
+    "watching",
+    "completed",
+  ];
+
+  const { data: tracking } = useTrackingForMovie(id!);
+  const { mutate: updateTracking } = useUpdateTracking();
+
+  useEffect(() => {
+    if (tracking && !initialized) {
+      setStatus(tracking.status);
+      setProgress(tracking.progress || 0);
+      setRating(tracking.rating || 0);
+      setInitialized(true);
+    }
+  }, [tracking, initialized]);
 
   if (isLoading) return <MoviePageSkeleton />;
 
@@ -95,6 +129,11 @@ const MoviePage = () => {
   }
 
   const typeConfig = TYPE_CONFIG[movie.type];
+
+  const hasChanged =
+    status !== tracking?.status ||
+    progress !== (tracking?.progress || 0) ||
+    rating !== (tracking?.rating || 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -239,17 +278,122 @@ const MoviePage = () => {
               )}
             </div>
 
-            <button
-              onClick={() => mutate(movie.$id)}
-              disabled={isTracked || isPending}
-              className="mt-4 bg-violet-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            <div className="flex gap-2 mt-4">
+              {statuses.map((s) => (
+                <Button
+                  key={s}
+                  variant={status === s ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatus(s)}
+                >
+                  {s}
+                </Button>
+              ))}
+            </div>
+
+            {status === "watching" && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Progress: {progress}%
+                </p>
+
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={progress}
+                  onChange={(e) => setProgress(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-muted-foreground">Rating</p>
+
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRating(r)}
+                    className={`text-lg ${
+                      rating >= r ? "text-yellow-400" : "text-muted-foreground"
+                    }`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              className="mt-4"
+              disabled={!hasChanged}
+              onClick={() => {
+                if (!user) {
+                  navigate("/login");
+                  return;
+                }
+
+                if (!tracking) {
+                  mutate(movie.$id, {
+                    onSuccess: (newTracking) => {
+                      updateTracking(
+                        {
+                          trackingId: newTracking.$id,
+                          data: { status, progress, rating },
+                        },
+                        {
+                          onSuccess: () => {
+                            toast.success("Tracking created successfully");
+                          },
+                          onError: () => {
+                            toast.error("Failed to create tracking");
+                          },
+                        },
+                      );
+                    },
+                  });
+                  return;
+                }
+
+                updateTracking(
+                  {
+                    trackingId: tracking.$id,
+                    data: { status, progress, rating },
+                  },
+                  {
+                    onSuccess: () => {
+                      toast.success("Tracking updated successfully");
+                    },
+                    onError: () => {
+                      toast.error("Failed to update tracking");
+                    },
+                  },
+                );
+              }}
+            >
+              Save Changes
+            </Button>
+
+            <Button
+              onClick={() => {
+                if (!user) {
+                  navigate("/login");
+                  return;
+                }
+                mutate(movie.$id);
+              }}
+              disabled={isPending}
+              className="mt-4"
+              variant={isTracked ? "secondary" : "default"}
             >
               {isPending
-                ? "Adding..."
+                ? "Updating..."
                 : isTracked
-                  ? "Added ✓"
+                  ? "Remove from Watchlist"
                   : "Add to Watchlist"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

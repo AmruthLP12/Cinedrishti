@@ -7,11 +7,12 @@ import MainLayout from "@/components/layout/MainLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import ProtectedAdmin from "@/components/ProtectedAdmin";
 
-// Lazy pages 👇
+
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Register = lazy(() => import("@/pages/auth/Register"));
 const Home = lazy(() => import("@/pages/dashboard/Home"));
 const MoviePage = lazy(() => import("@/pages/movies/MoviePage"));
+const ProfilePage = lazy(() => import("@/pages/profile/ProfilePage"));
 
 const ManageMovies = lazy(() => import("@/pages/admin/ManageMovies"));
 const AddMovie = lazy(() => import("@/pages/admin/AddMovie"));
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
       { path: "/movie/:id", element: withSuspense(<MoviePage />) },
       { path: "/login", element: withSuspense(<Login />) },
       { path: "/register", element: withSuspense(<Register />) },
+      { path: "/profile", element: withSuspense(<ProfilePage />) },
     ],
   },
 
