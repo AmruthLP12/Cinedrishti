@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Film, Edit, Trash2, AlertCircle, Plus, LayoutDashboard, Loader2 } from "lucide-react";
-import type { enumMovieGenre, enumMovieType } from "@/features/movies/types";
+import type {  enumMovieType } from "@/features/movies/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,10 +25,7 @@ const TYPE_STYLES: Record<enumMovieType, string> = {
   series: "bg-secondary text-secondary-foreground",
 };
 
-const GENRE_STYLES: Record<enumMovieGenre, string> = {
-  action: "bg-destructive/15 text-destructive border-transparent",
-  comedy: "bg-chart-1/15 text-chart-1 border-transparent",
-};
+
 
 const ManageMovies = () => {
   const { data, isLoading, isError } = useMovies();
@@ -95,11 +92,11 @@ const ManageMovies = () => {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-12 w-8 rounded" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-50" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-10" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-[100px] inline-block" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-25 inline-block" /></TableCell>
                   </TableRow>
                 ))
               ) : data?.length === 0 ? (
@@ -129,15 +126,19 @@ const ManageMovies = () => {
                     </TableCell>
                     <TableCell className="font-medium">{movie.title}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={`text-[10px] uppercase font-semibold h-5 ${TYPE_STYLES[movie.type]}`}>
+                      <Badge variant="secondary" className={`text-[10px] uppercase font-semibold h-5 ${TYPE_STYLES[movie.type?.toLowerCase() as enumMovieType] || TYPE_STYLES.movie}`}>
                         {movie.type}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {movie.genre ? (
-                        <Badge variant="outline" className={`text-[10px] h-5 capitalize ${GENRE_STYLES[movie.genre]}`}>
-                          {movie.genre}
-                        </Badge>
+                      {movie.genre && movie.genre.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {movie.genre.map((g, idx) => (
+                            <Badge key={idx} variant="outline" className="text-[10px] h-5 capitalize">
+                              {g}
+                            </Badge>
+                          ))}
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}

@@ -15,7 +15,7 @@ import {
   Tv2,
   Clapperboard,
 } from "lucide-react";
-import type { enumMovieGenre, enumMovieType } from "@/features/movies/types";
+import type {  enumMovieType } from "@/features/movies/types";
 import { useAddToTracking, useTracking } from "@/features/tracking/hooks";
 
 const TYPE_CONFIG: Record<
@@ -34,10 +34,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-const GENRE_STYLES: Record<enumMovieGenre, string> = {
-  action: "bg-destructive/15 text-destructive border-destructive/20",
-  comedy: "bg-chart-1/15 text-chart-1 border-chart-1/20",
-};
+
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const MoviePageSkeleton = () => (
@@ -170,7 +167,7 @@ const MoviePage = () => {
                 {movie.genre && (
                   <Badge
                     variant="outline"
-                    className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium capitalize ${GENRE_STYLES[movie.genre]}`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium capitalize `}
                   >
                     <Tag className="w-3 h-3" />
                     {movie.genre}

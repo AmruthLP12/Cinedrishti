@@ -2,12 +2,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCreateMovie } from "@/features/movies/hooks";
-import type { enumMovieType, enumMovieGenre } from "@/features/movies/types";
+import type { enumMovieType } from "@/features/movies/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from "@/components/ui/combobox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Film, ArrowLeft, Loader2 } from "lucide-react";
 
@@ -21,14 +21,14 @@ const AddMovie = () => {
     type: enumMovieType;
     poster: string;
     releaseYear: string; 
-    genre: enumMovieGenre;
+    genreInput: string;
   }>({
     title: "",
     description: "",
     type: "movie",
     poster: "",
     releaseYear: "",
-    genre: "action",
+    genreInput: "Action, Adventure",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,7 +40,7 @@ const AddMovie = () => {
       type: form.type, 
       poster: form.poster,
       releaseYear: form.releaseYear ? Number(form.releaseYear) : undefined,
-      genre: form.genre, 
+      genre: form.genreInput.split(',').map(g => g.trim()).filter(Boolean), 
     },
     {
       onSuccess: () => {
@@ -105,34 +105,28 @@ const AddMovie = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="type">Type</Label>
-                  <Select
+                  <Combobox
                     value={form.type}
-                    onValueChange={(value: enumMovieType) => setForm({ ...form, type: value })}
+                    onValueChange={(value: any | null) => { if (value) setForm({ ...form, type: value as enumMovieType }) }}
                   >
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="movie">Movie</SelectItem>
-                      <SelectItem value="series">Series</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <ComboboxInput placeholder="Select type" showClear={false} />
+                    <ComboboxContent>
+                      <ComboboxList>
+                        <ComboboxItem value="movie">Movie</ComboboxItem>
+                        <ComboboxItem value="series">Series</ComboboxItem>
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="genre">Genre</Label>
-                  <Select
-                    value={form.genre}
-                    onValueChange={(value: enumMovieGenre) => setForm({ ...form, genre: value })}
-                  >
-                    <SelectTrigger id="genre">
-                      <SelectValue placeholder="Select genre" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="action">Action</SelectItem>
-                      <SelectItem value="comedy">Comedy</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="genreInput">Genres (comma separated)</Label>
+                  <Input
+                    id="genreInput"
+                    placeholder="e.g. Action, Comedy"
+                    value={form.genreInput}
+                    onChange={(e) => setForm({ ...form, genreInput: e.target.value })}
+                  />
                 </div>
               </div>
 

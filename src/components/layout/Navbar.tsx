@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,12 +32,22 @@ const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
+
+
 export const Navbar = () => {
   // Mock — swap with useAuth()
   const { data: user, isLoading } = useUser();
   const { mutate: logoutUser } = useLogout();
 
+  
+
   const isAuthenticated = !!user;
+  const isAdmin = user?.labels?.includes("admin");
+
+  const navItems = [
+    ...NAV_LINKS,
+    ...(isAdmin ? [{ label: "Admin", href: "/admin/movies", icon: Settings }] : []),
+  ];
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,7 +69,7 @@ export const Navbar = () => {
       .toUpperCase() || "U";
 
   if (isLoading) {
-    return <div className="h-14" />; // prevent flicker
+    return <div className="h-14" />;
   }
 
   return (
@@ -79,13 +90,13 @@ export const Navbar = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1 flex-1 ml-4">
-          {NAV_LINKS.map(({ label, href, icon: Icon }) => (
+          {navItems.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
               to={href}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                location.pathname === href
+                location.pathname === href || (href !== "/" && location.pathname.startsWith(href))
                   ? "text-primary bg-primary/10"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent",
               )}
@@ -193,14 +204,14 @@ export const Navbar = () => {
                 <Separator />
 
                 <nav className="space-y-1">
-                  {NAV_LINKS.map(({ label, href, icon: Icon }) => (
+                  {navItems.map(({ label, href, icon: Icon }) => (
                     <Link
                       key={href}
                       to={href}
                       onClick={() => setMobileOpen(false)}
                       className={cn(
                         "flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                        location.pathname === href
+                        location.pathname === href || (href !== "/" && location.pathname.startsWith(href))
                           ? "text-primary bg-primary/10"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent",
                       )}

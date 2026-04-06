@@ -6,10 +6,6 @@ import { account, db } from "@/lib/appwrite";
 import type { Movie, MovieInput } from "./types";
 import { ID, Permission, Role } from "appwrite";
 
-
-
-
-
 const getMovies = async (): Promise<Movie[]> => {
   try {
     const res = await db.listRows<Movie>({
@@ -78,7 +74,5 @@ const deleteMovie = async (id: string) => {
   });
   return res;
 };
-
-
 
 export { getMovies, createMovie, getMovie, updateMovie, deleteMovie };

@@ -2,20 +2,27 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMovie, useUpdateMovie } from "@/features/movies/hooks";
-import type { enumMovieType, enumMovieGenre } from "@/features/movies/types";
+import type { enumMovieType } from "@/features/movies/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from "@/components/ui/combobox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Film, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const EditMovie = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const { data: movie, isLoading: isFetching, isError } = useMovie(id!);
   const { mutate: updateMovie, isPending: isUpdating } = useUpdateMovie();
 
@@ -24,59 +31,65 @@ const EditMovie = () => {
     description: string;
     type: enumMovieType;
     poster: string;
-    releaseYear: string; 
-    genre: enumMovieGenre;
+    releaseYear: string;
+    genreInput: string;
   }>({
     title: "",
     description: "",
     type: "movie",
     poster: "",
     releaseYear: "",
-    genre: "action",
+    genreInput: "",
   });
 
   // Populate form when movie data loads
   useEffect(() => {
     if (movie) {
+      const dbType =
+        movie.type?.toLowerCase() === "series" ? "series" : "movie";
       setForm({
         title: movie.title || "",
         description: movie.description || "",
-        type: movie.type || "movie",
+        type: dbType as enumMovieType,
         poster: movie.poster || "",
         releaseYear: movie.releaseYear ? String(movie.releaseYear) : "",
-        genre: movie.genre || "action",
+        genreInput:
+          movie.genre && movie.genre.length > 0 ? movie.genre.join(", ") : "",
       });
     }
   }, [movie]);
 
   const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!id) return;
+    e.preventDefault();
+    if (!id) return;
 
-  const payload: any = {
-  title: form.title,
-  type: form.type,
-};
+    const payload: any = {
+      title: form.title,
+      type: form.type,
+    };
 
-if (form.description) payload.description = form.description;
-if (form.poster) payload.poster = form.poster;
-if (form.genre) payload.genre = form.genre;
-if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
+    if (form.description) payload.description = form.description;
+    if (form.poster) payload.poster = form.poster;
+    payload.genre = form.genreInput
+      .split(",")
+      .map((g) => g.trim())
+      .filter(Boolean);
+    if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
 
-  // ✅ only add if exists
-  if (form.releaseYear) {
-    payload.releaseYear = Number(form.releaseYear);
-  }
-
-  updateMovie(
-    { id, data: payload },
-    {
-      onSuccess: () => {
-        navigate("/admin/movies");
-      },
+    // ✅ only add if exists
+    if (form.releaseYear) {
+      payload.releaseYear = Number(form.releaseYear);
     }
-  );
-};
+
+    updateMovie(
+      { id, data: payload },
+      {
+        onSuccess: () => {
+          navigate("/admin/movies");
+        },
+      },
+    );
+  };
 
   if (isFetching) {
     return (
@@ -94,7 +107,10 @@ if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error Loading Data</AlertTitle>
-            <AlertDescription>Failed to load the movie catalogue data for this ID. It may not exist or an error occurred.</AlertDescription>
+            <AlertDescription>
+              Failed to load the movie catalogue data for this ID. It may not
+              exist or an error occurred.
+            </AlertDescription>
           </Alert>
           <Button variant="outline" asChild>
             <Link to="/admin/movies">Return to Admin</Link>
@@ -107,7 +123,6 @@ if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
-        
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" asChild className="rounded-full">
             <Link to="/admin/movies">
@@ -134,7 +149,6 @@ if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
@@ -152,42 +166,40 @@ if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
                   id="description"
                   placeholder="A brief summary of the plot..."
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="min-h-[100px]"
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  className="min-h-25"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="type">Type</Label>
-                  <Select
+                  <Combobox
                     value={form.type}
-                    onValueChange={(value: enumMovieType) => setForm({ ...form, type: value })}
+                    onValueChange={(value: any | null) => { if (value) setForm({ ...form, type: value as enumMovieType }) }}
                   >
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="movie">Movie</SelectItem>
-                      <SelectItem value="series">Series</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <ComboboxInput placeholder="Select type" showClear={false} />
+                    <ComboboxContent>
+                      <ComboboxList>
+                        <ComboboxItem value="movie">Movie</ComboboxItem>
+                        <ComboboxItem value="series">Series</ComboboxItem>
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="genre">Genre</Label>
-                  <Select
-                    value={form.genre}
-                    onValueChange={(value: enumMovieGenre) => setForm({ ...form, genre: value })}
-                  >
-                    <SelectTrigger id="genre">
-                      <SelectValue placeholder="Select genre" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="action">Action</SelectItem>
-                      <SelectItem value="comedy">Comedy</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="genreInput">Genres (comma separated)</Label>
+                  <Input
+                    id="genreInput"
+                    placeholder="e.g. Action, Comedy"
+                    value={form.genreInput}
+                    onChange={(e) =>
+                      setForm({ ...form, genreInput: e.target.value })
+                    }
+                  />
                 </div>
               </div>
 
@@ -202,11 +214,11 @@ if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
                 />
                 {form.poster && (
                   <div className="mt-4 border rounded-md p-2 bg-muted/50 w-max">
-                    <img 
-                      src={form.poster} 
-                      alt="Poster Preview" 
+                    <img
+                      src={form.poster}
+                      alt="Poster Preview"
                       className="h-32 w-auto object-cover rounded shadow-sm"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                      onError={(e) => (e.currentTarget.style.display = "none")}
                     />
                   </div>
                 )}
@@ -219,10 +231,11 @@ if (form.releaseYear) payload.releaseYear = Number(form.releaseYear);
                   type="number"
                   placeholder="e.g. 2024"
                   value={form.releaseYear}
-                  onChange={(e) => setForm({ ...form, releaseYear: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, releaseYear: e.target.value })
+                  }
                 />
               </div>
-
             </CardContent>
             <CardFooter className="bg-muted/30 pt-6 border-t flex justify-end gap-3">
               <Button variant="outline" type="button" asChild>

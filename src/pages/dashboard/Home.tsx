@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Film, AlertCircle, TrendingUp } from "lucide-react";
-import type { Movie, enumMovieGenre, enumMovieType } from "@/features/movies/types";
+import type { Movie,  enumMovieType } from "@/features/movies/types";
 
 
 const TYPE_STYLES: Record<enumMovieType, string> = {
@@ -13,10 +13,7 @@ const TYPE_STYLES: Record<enumMovieType, string> = {
   series: "bg-secondary hover:bg-secondary/80 text-secondary-foreground",
 };
 
-const GENRE_STYLES: Record<enumMovieGenre, string> = {
-  action: "bg-destructive/15 text-destructive border-destructive/20",
-  comedy: "bg-chart-1/15 text-chart-1 border-chart-1/20",
-};
+
 
 const MovieCardSkeleton = () => (
   <div className="rounded-xl overflow-hidden border border-border bg-card">
@@ -88,7 +85,7 @@ const MovieCard = ({ movie }: { movie: Movie }) => (
             <span className="text-muted-foreground/40 text-xs">·</span>
             <Badge
               variant="outline"
-              className={`text-[10px] px-1.5 py-0 h-4 capitalize ${GENRE_STYLES[movie.genre]}`}
+              className={`text-[10px] px-1.5 py-0 h-4 capitalize `}
             >
               {movie.genre}
             </Badge>

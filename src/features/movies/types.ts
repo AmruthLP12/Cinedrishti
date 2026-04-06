@@ -1,6 +1,5 @@
 type enumMovieType = "movie" | "series";
 
-type enumMovieGenre = "action" | "comedy";
 
 
 type Movie = {
@@ -17,7 +16,7 @@ type Movie = {
   type: enumMovieType;
   poster?: string;
   releaseYear?: number;
-  genre?: enumMovieGenre;
+  genre?: string[];
   createdBy: string;
 };
 
@@ -27,7 +26,7 @@ type MovieInput = {
   type: enumMovieType;
   poster?: string;
   releaseYear?: number;
-  genre?: enumMovieGenre;
+  genre?: string[];
 };
 
-export type { Movie, enumMovieType, enumMovieGenre , MovieInput};
+export type { Movie, enumMovieType , MovieInput};
