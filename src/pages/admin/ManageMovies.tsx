@@ -79,7 +79,7 @@ const ManageMovies = () => {
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="w-[80px]">Poster</TableHead>
+                <TableHead className="w-20">Poster</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Genre</TableHead>

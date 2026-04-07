@@ -117,7 +117,7 @@ export const updateTracking = async ({
   data,
 }: {
   trackingId: string;
-  data: Partial<Pick<Tracking, "status" | "progress" | "rating">>;
+  data: Partial<Pick<Tracking, "status" | "progress" | "rating" | "startDate" | "endDate">>;
 }) => {
   return db.updateRow({
     databaseId: DATABASE_ID,

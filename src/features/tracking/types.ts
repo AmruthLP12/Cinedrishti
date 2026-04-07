@@ -14,6 +14,9 @@ type Tracking = {
   status: enumTrackingStatus;
   progress?: number;
   rating?: number;
+
+  startDate: string | null;
+  endDate: string | null;
 };
 
 export type { Tracking, enumTrackingStatus };
