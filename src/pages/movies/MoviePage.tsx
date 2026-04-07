@@ -338,9 +338,10 @@ const MoviePage = () => {
                 if (!tracking) {
                   mutate(movie.$id, {
                     onSuccess: (newTracking) => {
+                      const trackingData = newTracking as {$id :string}
                       updateTracking(
                         {
-                          trackingId: newTracking.$id,
+                          trackingId: trackingData.$id,
                           data: { status, progress, rating },
                         },
                         {
