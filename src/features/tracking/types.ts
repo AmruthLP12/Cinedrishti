@@ -13,6 +13,10 @@ type Tracking = {
   movieId: string;
   status: enumTrackingStatus;
   progress?: number;
+
+  episodesWatched?: number;
+  totalEpisodes?: number;
+
   rating?: number;
 
   startDate: string | null;

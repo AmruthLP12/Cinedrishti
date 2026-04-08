@@ -7,8 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from "@/components/ui/combobox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+} from "@/components/ui/combobox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Film, ArrowLeft, Loader2 } from "lucide-react";
 
 const AddMovie = () => {
@@ -20,8 +33,9 @@ const AddMovie = () => {
     description: string;
     type: enumMovieType;
     poster: string;
-    releaseYear: string; 
+    releaseYear: string;
     genreInput: string;
+    episodes: number;
   }>({
     title: "",
     description: "",
@@ -29,30 +43,36 @@ const AddMovie = () => {
     poster: "",
     releaseYear: "",
     genreInput: "Action, Adventure",
+    episodes: 1,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    mutate({
-      title: form.title,
-      description: form.description,
-      type: form.type, 
-      poster: form.poster,
-      releaseYear: form.releaseYear ? Number(form.releaseYear) : undefined,
-      genre: form.genreInput.split(',').map(g => g.trim()).filter(Boolean), 
-    },
-    {
-      onSuccess: () => {
-        navigate("/admin/movies");
+    mutate(
+      {
+        title: form.title,
+        description: form.description,
+        type: form.type,
+        poster: form.poster,
+        releaseYear: form.releaseYear ? Number(form.releaseYear) : undefined,
+        genre: form.genreInput
+          .split(",")
+          .map((g) => g.trim())
+          .filter(Boolean),
+        episodes: form.episodes ? Number(form.episodes) : undefined,
       },
-    });
+      {
+        onSuccess: () => {
+          navigate("/admin/movies");
+        },
+      },
+    );
   };
 
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
-        
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" asChild className="rounded-full">
             <Link to="/admin/movies">
@@ -75,11 +95,11 @@ const AddMovie = () => {
             <CardHeader>
               <CardTitle>Movie Details</CardTitle>
               <CardDescription>
-                Enter the details of the new movie or series to add it to your catalog.
+                Enter the details of the new movie or series to add it to your
+                catalog.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
@@ -97,7 +117,9 @@ const AddMovie = () => {
                   id="description"
                   placeholder="A brief summary of the plot..."
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
                   className="min-h-25"
                 />
               </div>
@@ -107,9 +129,14 @@ const AddMovie = () => {
                   <Label htmlFor="type">Type</Label>
                   <Combobox
                     value={form.type}
-                    onValueChange={(value: any | null) => { if (value) setForm({ ...form, type: value as enumMovieType }) }}
+                    onValueChange={(value: enumMovieType | null) => {
+                      if (value) setForm({ ...form, type: value });
+                    }}
                   >
-                    <ComboboxInput placeholder="Select type" showClear={false} />
+                    <ComboboxInput
+                      placeholder="Select type"
+                      showClear={false}
+                    />
                     <ComboboxContent>
                       <ComboboxList>
                         <ComboboxItem value="movie">Movie</ComboboxItem>
@@ -120,12 +147,27 @@ const AddMovie = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="episodes">Episodes</Label>
+                  <Input
+                    id="episodes"
+                    type="number"
+                    placeholder="e.g. 10"
+                    value={form.episodes}
+                    onChange={(e) =>
+                      setForm({ ...form, episodes: Number(e.target.value) })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="genreInput">Genres (comma separated)</Label>
                   <Input
                     id="genreInput"
                     placeholder="e.g. Action, Comedy"
                     value={form.genreInput}
-                    onChange={(e) => setForm({ ...form, genreInput: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, genreInput: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -141,11 +183,11 @@ const AddMovie = () => {
                 />
                 {form.poster && (
                   <div className="mt-4 border rounded-md p-2 bg-muted/50 w-max">
-                    <img 
-                      src={form.poster} 
-                      alt="Poster Preview" 
+                    <img
+                      src={form.poster}
+                      alt="Poster Preview"
                       className="h-32 w-auto object-cover rounded shadow-sm"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                      onError={(e) => (e.currentTarget.style.display = "none")}
                     />
                   </div>
                 )}
@@ -158,10 +200,11 @@ const AddMovie = () => {
                   type="number"
                   placeholder="e.g. 2024"
                   value={form.releaseYear}
-                  onChange={(e) => setForm({ ...form, releaseYear: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, releaseYear: e.target.value })
+                  }
                 />
               </div>
-
             </CardContent>
             <CardFooter className="bg-muted/30 pt-6 border-t">
               <div className="flex justify-end w-full gap-3">

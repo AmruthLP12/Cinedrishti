@@ -1,3 +1,4 @@
+// src/pages/movies/MovieTrackingModal.tsx
 import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
@@ -8,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Save, X } from "lucide-react";
+import { Save, X, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 
 import type { enumTrackingStatus } from "@/features/tracking/types";
@@ -16,8 +17,8 @@ import { useMovie } from "@/features/movies/hooks";
 import {
   useTrackingForMovie,
   useUpdateTracking,
+  useUpdateEpisodeProgress,
 } from "@/features/tracking/hooks";
-import { useUser } from "@/features/auth/hooks";
 
 interface MovieTrackingModalProps {
   movieId: string;
@@ -32,15 +33,22 @@ const MovieTrackingModal = ({
 }: MovieTrackingModalProps) => {
   const { data: movie } = useMovie(movieId);
   const { data: tracking } = useTrackingForMovie(movieId);
-  const { mutate: updateTrackingMutate, isPending: isUpdating } =
-    useUpdateTracking();
-  const { data: user } = useUser();
 
+  const { mutate: updateTrackingMutate, isPending: isUpdating } = useUpdateTracking();
+  const { mutate: updateEpisodeMutate, isPending: isEpisodeUpdating } = useUpdateEpisodeProgress();
+
+  const isSeries = movie?.type === "series";
+
+  // Form State
   const [status, setStatus] = useState<enumTrackingStatus>("plan");
   const [progress, setProgress] = useState(0);
+  const [episodesWatched, setEpisodesWatched] = useState(0);
   const [rating, setRating] = useState(0);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
+
+  // Total episodes is now frozen from the movies table
+  const totalEpisodes = movie?.episodes ?? 0;
 
   // Reset form when modal opens or tracking data changes
   useEffect(() => {
@@ -49,22 +57,23 @@ const MovieTrackingModal = ({
     if (tracking) {
       setStatus(tracking.status);
       setProgress(tracking.progress ?? 0);
+      setEpisodesWatched(tracking.episodesWatched ?? 0);
       setRating(tracking.rating ?? 0);
       setStartDate(tracking.startDate ?? null);
       setEndDate(tracking.endDate ?? null);
     } else {
       setStatus("plan");
       setProgress(0);
+      setEpisodesWatched(0);
       setRating(0);
       setStartDate(null);
       setEndDate(null);
     }
   }, [tracking, isOpen]);
 
-  // Auto-set dates based on status (only when necessary)
+  // Auto-set dates based on status
   useEffect(() => {
     if (!isOpen) return;
-
     const today = new Date().toISOString().split("T")[0];
 
     if (status === "watching" && !startDate) {
@@ -76,8 +85,7 @@ const MovieTrackingModal = ({
     if (status !== "completed" && endDate) {
       setEndDate(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, isOpen]);
+  }, [status, isOpen, startDate, endDate]);
 
   const hasChanged = useMemo(() => {
     if (!tracking) return true;
@@ -85,47 +93,51 @@ const MovieTrackingModal = ({
     return (
       status !== tracking.status ||
       progress !== (tracking.progress ?? 0) ||
+      episodesWatched !== (tracking.episodesWatched ?? 0) ||
       rating !== (tracking.rating ?? 0) ||
       startDate !== tracking.startDate ||
       endDate !== tracking.endDate
     );
-  }, [status, progress, rating, startDate, endDate, tracking]);
+  }, [status, progress, episodesWatched, rating, startDate, endDate, tracking]);
 
   const handleSave = () => {
-    if (!user) {
-      toast.error("Please log in to update tracking");
-      return;
-    }
     if (!tracking) {
-      toast.error("Tracking creation not implemented yet.");
+      toast.error("Please add this title to your watchlist first.");
       return;
     }
 
-    const updateData: Partial<{
-      status: enumTrackingStatus;
-      progress?: number;
-      rating?: number;
-      startDate: string | null;
-      endDate: string | null;
-    }> = { status, startDate, endDate };
-
-    if (status === "watching") {
-      updateData.progress = progress;
-    }
-    if (rating > 0) {
-      updateData.rating = rating;
-    }
-
-    updateTrackingMutate(
-      { trackingId: tracking.$id, data: updateData },
-      {
-        onSuccess: () => {
-          toast.success("Tracking updated successfully");
-          onClose();
+    if (isSeries) {
+      updateEpisodeMutate(
+        {
+          trackingId: tracking.$id,
+          episodesWatched,
+          totalEpisodes: totalEpisodes > 0 ? totalEpisodes : undefined,
         },
-        onError: () => toast.error("Failed to update tracking"),
-      },
-    );
+        {
+          onSuccess: () => {
+            toast.success("Episode progress updated successfully");
+            onClose();
+          },
+          onError: () => toast.error("Failed to update episode progress"),
+        }
+      );
+    } else {
+      const updateData: any = { status, startDate, endDate };
+
+      if (status === "watching") updateData.progress = progress;
+      if (rating > 0) updateData.rating = rating;
+
+      updateTrackingMutate(
+        { trackingId: tracking.$id, data: updateData },
+        {
+          onSuccess: () => {
+            toast.success("Tracking updated successfully");
+            onClose();
+          },
+          onError: () => toast.error("Failed to update tracking"),
+        }
+      );
+    }
   };
 
   return (
@@ -133,9 +145,7 @@ const MovieTrackingModal = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Update Progress</DialogTitle>
-          {movie && (
-            <p className="text-sm text-muted-foreground">{movie.title}</p>
-          )}
+          {movie && <p className="text-sm text-muted-foreground">{movie.title}</p>}
         </DialogHeader>
 
         <Card>
@@ -157,8 +167,52 @@ const MovieTrackingModal = ({
               </div>
             </div>
 
-            {/* Progress */}
-            {status === "watching" && (
+            {/* Episode Tracking - Only for Series */}
+            {isSeries && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Episodes Watched</Label>
+                  <div className="flex items-center gap-4 mt-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEpisodesWatched(Math.max(0, episodesWatched - 1))}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+
+                    <div className="flex-1 text-center text-3xl font-semibold tabular-nums">
+                      {episodesWatched}
+                      {totalEpisodes > 0 && (
+                        <span className="text-muted-foreground text-xl"> / {totalEpisodes}</span>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEpisodesWatched(episodesWatched + 1)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Frozen Total Episodes */}
+                <div className="space-y-1">
+                  <Label>Total Episodes</Label>
+                  <div className="px-4 py-3 bg-muted/50 border border-border rounded-md text-lg font-medium">
+                    {totalEpisodes || "Not specified in database"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This value is taken from the movie database and cannot be changed here.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Progress Slider - Only for Movies */}
+            {!isSeries && status === "watching" && (
               <div className="space-y-2">
                 <Label>Progress: {progress}%</Label>
                 <input
@@ -205,9 +259,7 @@ const MovieTrackingModal = ({
                     key={r}
                     onClick={() => setRating(r)}
                     className={`text-3xl transition-colors ${
-                      rating >= r
-                        ? "text-yellow-400"
-                        : "text-muted-foreground/40"
+                      rating >= r ? "text-yellow-400" : "text-muted-foreground/40"
                     }`}
                   >
                     ★
@@ -216,15 +268,15 @@ const MovieTrackingModal = ({
               </div>
             </div>
 
-            {/* Buttons */}
+            {/* Action Buttons */}
             <div className="flex gap-3 pt-4">
               <Button
                 onClick={handleSave}
-                disabled={!hasChanged || isUpdating}
+                disabled={!hasChanged || isUpdating || isEpisodeUpdating}
                 className="flex-1"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isUpdating ? "Saving..." : "Save Changes"}
+                {isUpdating || isEpisodeUpdating ? "Saving..." : "Save Changes"}
               </Button>
               <Button variant="outline" onClick={onClose} className="flex-1">
                 <X className="w-4 h-4 mr-2" />

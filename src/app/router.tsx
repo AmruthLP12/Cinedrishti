@@ -12,8 +12,7 @@ import {
   MovieDetailsPage,
   ProfilePage,
   ManageMovies,
-  AddMovie,
-  EditMovie,
+  MovieForm,
 } from "./lazyRoutes";
 
 export const router = createBrowserRouter([
@@ -37,8 +36,8 @@ export const router = createBrowserRouter([
     ),
     children: [
       { path: "movies", element: withSuspense(<ManageMovies />) },
-      { path: "add-movie", element: withSuspense(<AddMovie />) },
-      { path: "edit-movie/:id", element: withSuspense(<EditMovie />) },
+      { path: "add-movie", element: withSuspense(<MovieForm mode="add" />) },
+      { path: "edit-movie/:id", element: withSuspense(<MovieForm mode="edit" />) },
     ],
   },
 ]);

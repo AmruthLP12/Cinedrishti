@@ -93,7 +93,9 @@ export const toggleWatchlist = async (movieId: string) => {
       tableId: TRACKING_TABLE_ID,
       rowId: row.$id,
       data: {
-        status: "plan",
+        status: "plan" as const,
+        episodesWatched: null,
+        progress: null,
       },
     });
   }
@@ -106,24 +108,86 @@ export const toggleWatchlist = async (movieId: string) => {
     data: {
       userId: user.$id,
       movieId,
-      status: "plan",
+      status: "plan" as const,
+      episodesWatched: null,
+      totalEpisodes: null,
+      progress: null,
+      rating: null,
+      startDate: null,
+      endDate: null,
     },
   });
 };
-
 
 export const updateTracking = async ({
   trackingId,
   data,
 }: {
   trackingId: string;
-  data: Partial<Pick<Tracking, "status" | "progress" | "rating" | "startDate" | "endDate">>;
+  data: Partial<
+    Pick<
+      Tracking,
+      | "status"
+      | "progress"
+      | "episodesWatched"
+      | "totalEpisodes"
+      | "rating"
+      | "startDate"
+      | "endDate"
+    >
+  >;
 }) => {
+  // Optional: Smart logic - if episodesWatched >= totalEpisodes, auto complete
+  const finalData = { ...data };
+
+  if (
+    data.episodesWatched !== undefined &&
+    data.totalEpisodes &&
+    data.episodesWatched >= data.totalEpisodes
+  ) {
+    finalData.status = "completed";
+    finalData.endDate = finalData.endDate || new Date().toISOString();
+  }
+
+  // If status is "watching" and no startDate, set it
+  if (data.status === "watching" && !data.startDate) {
+    finalData.startDate = finalData.startDate || new Date().toISOString();
+  }
+
   return db.updateRow({
     databaseId: DATABASE_ID,
     tableId: TRACKING_TABLE_ID,
     rowId: trackingId,
-    data,
+    data: finalData,
   });
 };
 
+/**
+ * Optional: Helper to update only episode progress (very useful for series)
+ */
+export const updateEpisodeProgress = async ({
+  trackingId,
+  episodesWatched,
+  totalEpisodes,
+}: {
+  trackingId: string;
+  episodesWatched: number;
+  totalEpisodes?: number;
+}) => {
+  const data: Partial<Tracking> = {
+    episodesWatched,
+    status: "watching" as const,
+  };
+
+  if (totalEpisodes) {
+    data.totalEpisodes = totalEpisodes;
+  }
+
+  // Auto-complete if all episodes watched
+  if (totalEpisodes && episodesWatched >= totalEpisodes) {
+    data.status = "completed";
+    data.endDate = new Date().toISOString();
+  }
+
+  return updateTracking({ trackingId, data });
+};

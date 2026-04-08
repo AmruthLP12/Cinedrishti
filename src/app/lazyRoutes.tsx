@@ -10,3 +10,4 @@ export const ProfilePage = lazy(() => import("@/pages/profile/ProfilePage"));
 export const ManageMovies = lazy(() => import("@/pages/admin/ManageMovies"));
 export const AddMovie = lazy(() => import("@/pages/admin/AddMovie"));
 export const EditMovie = lazy(() => import("@/pages/admin/EditMovie"));
+export const MovieForm = lazy(() => import("@/pages/admin/MovieForm"));

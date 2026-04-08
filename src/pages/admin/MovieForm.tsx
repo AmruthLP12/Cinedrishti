@@ -1,13 +1,19 @@
-// pages/admin/EditMovie.tsx
+// pages/admin/MovieForm.tsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useMovie, useUpdateMovie } from "@/features/movies/hooks";
+import { useMovie, useCreateMovie, useUpdateMovie } from "@/features/movies/hooks";
 import type { enumMovieType } from "@/features/movies/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from "@/components/ui/combobox";
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+} from "@/components/ui/combobox";
 import {
   Card,
   CardContent,
@@ -19,11 +25,20 @@ import {
 import { Film, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const EditMovie = () => {
+type MovieFormProps = {
+  mode: "add" | "edit";
+};
+
+const MovieForm = ({ mode }: MovieFormProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const { data: movie, isLoading: isFetching, isError } = useMovie(id!);
+  const { mutate: createMovie, isPending: isCreating } = useCreateMovie();
   const { mutate: updateMovie, isPending: isUpdating } = useUpdateMovie();
+
+  const isEditMode = mode === "edit";
+  const isPending = isEditMode ? isUpdating : isCreating;
 
   const [form, setForm] = useState<{
     title: string;
@@ -39,77 +54,62 @@ const EditMovie = () => {
     type: "movie",
     poster: "",
     releaseYear: "",
-    genreInput: "",
+    genreInput: "Action, Adventure",
     episodes: 1,
   });
 
-  // ✅ Fixed: Populate form when movie data loads (using functional update + dependency)
+  // Populate form only in edit mode
   useEffect(() => {
-    if (movie) {
-      const dbType =
-        movie.type?.toLowerCase() === "series" ? "series" : "movie";
+    if (isEditMode && movie) {
+      const dbType = movie.type?.toLowerCase() === "series" ? "series" : "movie";
 
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm((prev) => ({
-        ...prev,
+      setForm({
         title: movie.title || "",
         description: movie.description || "",
         type: dbType as enumMovieType,
         poster: movie.poster || "",
         releaseYear: movie.releaseYear ? String(movie.releaseYear) : "",
-        genreInput:
-          movie.genre && movie.genre.length > 0 ? movie.genre.join(", ") : "",
-        // Keep episodes as is (or set from movie if available)
-        episodes: movie.episodes ?? prev.episodes,
-      }));
+        genreInput: movie.genre && movie.genre.length > 0 
+          ? movie.genre.join(", ") 
+          : "",
+        episodes: movie.episodes ?? 1,
+      });
     }
-  }, [movie]);
+  }, [movie, isEditMode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
 
-    const payload: {
-      title: string;
-      type: enumMovieType;
-      description?: string;
-      poster?: string;
-      genre?: string[];
-      releaseYear?: number;
-      episodes?: number;
-    } = {
+    const payload = {
       title: form.title,
       type: form.type,
+      description: form.description || undefined,
+      poster: form.poster || undefined,
+      genre: form.genreInput
+        .split(",")
+        .map((g) => g.trim())
+        .filter(Boolean),
+      releaseYear: form.releaseYear ? Number(form.releaseYear) : undefined,
+      episodes: form.type === "series" && form.episodes > 0 
+        ? form.episodes 
+        : undefined,
     };
 
-    if (form.description) payload.description = form.description;
-    if (form.poster) payload.poster = form.poster;
-
-    payload.genre = form.genreInput
-      .split(",")
-      .map((g) => g.trim())
-      .filter(Boolean);
-
-    if (form.releaseYear) {
-      payload.releaseYear = Number(form.releaseYear);
+    if (isEditMode && id) {
+      updateMovie(
+        { id, data: payload },
+        { onSuccess: () => navigate("/admin/movies") }
+      );
+    } else {
+      createMovie(payload, {
+        onSuccess: () => navigate("/admin/movies"),
+      });
     }
-
-    // Only include episodes for series (optional improvement)
-    if (form.type === "series" && form.episodes > 0) {
-      payload.episodes = form.episodes;
-    }
-
-    updateMovie(
-      { id, data: payload },
-      {
-        onSuccess: () => {
-          navigate("/admin/movies");
-        },
-      },
-    );
   };
 
-  if (isFetching) {
+  // Loading & Error states (only for edit mode)
+  if (isEditMode && isFetching) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -118,7 +118,7 @@ const EditMovie = () => {
     );
   }
 
-  if (isError) {
+  if (isEditMode && isError) {
     return (
       <div className="min-h-screen bg-background py-10 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -126,8 +126,7 @@ const EditMovie = () => {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error Loading Data</AlertTitle>
             <AlertDescription>
-              Failed to load the movie catalogue data for this ID. It may not
-              exist or an error occurred.
+              Failed to load the movie data. It may not exist or an error occurred.
             </AlertDescription>
           </Alert>
           <Button variant="outline" asChild>
@@ -137,6 +136,12 @@ const EditMovie = () => {
       </div>
     );
   }
+
+  const pageTitle = isEditMode ? "Edit Title" : "Add New Title";
+  const buttonText = isEditMode ? "Save Changes" : "Add Title";
+  const description = isEditMode 
+    ? "Update the details of this movie or series." 
+    : "Enter the details of the new movie or series to add it to your catalog.";
 
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6">
@@ -153,7 +158,7 @@ const EditMovie = () => {
               <Film className="w-4 h-4 text-primary" />
             </div>
             <h1 className="font-heading font-bold text-2xl text-foreground tracking-tight">
-              Edit Title
+              {pageTitle}
             </h1>
           </div>
         </div>
@@ -162,12 +167,11 @@ const EditMovie = () => {
           <form onSubmit={handleSubmit}>
             <CardHeader>
               <CardTitle>Movie Details</CardTitle>
-              <CardDescription>
-                Update the details of this movie or series.
-              </CardDescription>
+              <CardDescription>{description}</CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-6">
+              {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
@@ -179,6 +183,7 @@ const EditMovie = () => {
                 />
               </div>
 
+              {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -193,13 +198,19 @@ const EditMovie = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Type */}
                 <div className="space-y-2">
                   <Label htmlFor="type">Type</Label>
                   <Combobox
                     value={form.type}
                     onValueChange={(value) => {
                       if (value) {
-                        setForm({ ...form, type: value as enumMovieType });
+                        setForm((prev) => ({ 
+                          ...prev, 
+                          type: value as enumMovieType,
+                          // Reset episodes when switching to movie
+                          episodes: value === "movie" ? 1 : prev.episodes 
+                        }));
                       }
                     }}
                   >
@@ -213,25 +224,32 @@ const EditMovie = () => {
                   </Combobox>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="episodes">Episodes</Label>
-                  <Input
-                    id="episodes"
-                    type="number"
-                    placeholder="e.g. 10"
-                    value={form.episodes}
-                    onChange={(e) =>
-                      setForm({ ...form, episodes: Number(e.target.value) || 1 })
-                    }
-                    disabled={form.type !== "series"}
-                  />
-                </div>
+                {/* Episodes - Only show when type is "series" */}
+                {form.type === "series" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="episodes">Number of Episodes</Label>
+                    <Input
+                      id="episodes"
+                      type="number"
+                      placeholder="e.g. 10"
+                      value={form.episodes}
+                      onChange={(e) =>
+                        setForm({ 
+                          ...form, 
+                          episodes: Number(e.target.value) || 1 
+                        })
+                      }
+                      min="1"
+                    />
+                  </div>
+                )}
 
-                <div className="space-y-2">
+                {/* Genres - Takes full width when episodes is hidden */}
+                <div className={`space-y-2 ${form.type === "series" ? "" : "sm:col-span-2"}`}>
                   <Label htmlFor="genreInput">Genres (comma separated)</Label>
                   <Input
                     id="genreInput"
-                    placeholder="e.g. Action, Comedy"
+                    placeholder="e.g. Action, Comedy, Thriller"
                     value={form.genreInput}
                     onChange={(e) =>
                       setForm({ ...form, genreInput: e.target.value })
@@ -240,6 +258,7 @@ const EditMovie = () => {
                 </div>
               </div>
 
+              {/* Poster URL */}
               <div className="space-y-2">
                 <Label htmlFor="poster">Poster URL</Label>
                 <Input
@@ -261,6 +280,7 @@ const EditMovie = () => {
                 )}
               </div>
 
+              {/* Release Year */}
               <div className="space-y-2">
                 <Label htmlFor="releaseYear">Release Year</Label>
                 <Input
@@ -279,14 +299,14 @@ const EditMovie = () => {
               <Button variant="outline" type="button" asChild>
                 <Link to="/admin/movies">Cancel</Link>
               </Button>
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating ? (
+              <Button type="submit" disabled={isPending}>
+                {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
                 ) : (
-                  "Save Changes"
+                  buttonText
                 )}
               </Button>
             </CardFooter>
@@ -297,4 +317,4 @@ const EditMovie = () => {
   );
 };
 
-export default EditMovie;
+export default MovieForm;

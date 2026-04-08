@@ -65,6 +65,7 @@ const MoviePage = () => {
   // Load tracking data into form when tracking changes or when entering edit mode
   useEffect(() => {
     if (tracking) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus(tracking.status);
       setProgress(tracking.progress || 0);
       setRating(tracking.rating || 0);
@@ -87,6 +88,7 @@ const MoviePage = () => {
     const today = new Date().toISOString().split("T")[0];
 
     if (status === "watching" && !startDate) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStartDate(today);
     }
     if (status === "completed" && !endDate) {

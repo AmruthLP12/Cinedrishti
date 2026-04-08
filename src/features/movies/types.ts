@@ -1,7 +1,5 @@
 type enumMovieType = "movie" | "series";
 
-
-
 type Movie = {
   $id: string;
   $sequence: string;
@@ -17,6 +15,7 @@ type Movie = {
   poster?: string;
   releaseYear?: number;
   genre?: string[];
+  episodes?: number;
   createdBy: string;
 };
 
@@ -26,7 +25,8 @@ type MovieInput = {
   type: enumMovieType;
   poster?: string;
   releaseYear?: number;
+  episodes?: number;
   genre?: string[];
 };
 
-export type { Movie, enumMovieType , MovieInput};
+export type { Movie, enumMovieType, MovieInput };
